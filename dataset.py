@@ -100,26 +100,5 @@ class Dataset:
         return self.load_pairs(audio_root, transcript_root)
 
 
-def collate_fn(batch):
-    features, transcripts = zip(*batch)
 
-    # Pad features
-    feature_lengths = [f.shape[0] for f in features]
-    max_len = max(feature_lengths)
-    feat_dim = features[0].shape[1]
-    features_padded = torch.zeros(max_len, len(batch), feat_dim)  # (T, B, F)
-    for i, f in enumerate(features):
-        features_padded[:f.shape[0], i, :] = f
-
-    # Concatenate transcripts
-    transcript_lengths = [len(t) for t in transcripts]
-    transcripts_concat = torch.cat(transcripts)
-
-    #Debug prints
-    print(features_padded.shape)   # (max_time, batch, feat_dim)
-    print(transcripts_concat.shape)  # (sum of label lengths,)
-    print(feature_lengths)  
-    print(transcript_lengths)
-
-    return features_padded, transcripts_concat, torch.tensor(feature_lengths), torch.tensor(transcript_lengths)
 
