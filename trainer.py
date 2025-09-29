@@ -6,17 +6,12 @@ from model import SpeechModel
 from decoder import CTCBeamSearchDecoder
 import editdistance
 
-# -------------------------
-# Utilities
-# -------------------------
+
 def cer(pred_text, target_text):
     if len(target_text) == 0:
         return 1.0 if len(pred_text) > 0 else 0.0
     return editdistance.eval(pred_text, target_text) / len(target_text)
 
-# -------------------------
-# Evaluation (unchanged mostly, with a little more debug)
-# -------------------------
 def evaluate(model, loader, criterion, dataset, decoder, device, logit_scale=None, idx2char=None):
     model.eval()
     total_loss, total_cer, num_samples = 0.0, 0.0, 0
@@ -177,16 +172,8 @@ def collate_fn(batch):
 
     return features_padded, transcripts_concat, feature_lengths, transcript_lengths
 
-# -------------------------
-# Training entrypoint (main edits here)
-# -------------------------
+
 def train_ctc(num_epochs=50, batch_size=8, lr=1e-3, hidden_dim=512, device=None):
-    """
-    Changes from original:
-    - Default lr increased to 1e-3 (try from-scratch training).
-    - Added learnable `logit_scale` parameter initialized to 5.0 and multiplied into logits
-      before softmax; this is registered in the optimizer so it is trained.
-    """
     device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
@@ -356,10 +343,7 @@ def train_ctc(num_epochs=50, batch_size=8, lr=1e-3, hidden_dim=512, device=None)
             }, "best_ctc_model.pth")
             print(f"Saved new best model with CER {best_cer:.4f}")
 
-        # Early stopping if CER stops improving drastically
-        if avg_val_cer > best_cer * 2 and epoch > 10:
-            print("Early stopping: validation CER not improving")
-            break
+        
 
     print(f"Training completed. Best CER: {best_cer:.4f}")
     return model
