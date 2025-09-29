@@ -329,7 +329,7 @@ def train_ctc(num_epochs=50, batch_size=8, lr=1e-3, hidden_dim=512, device=None)
         print("Running validation...")
         avg_val_loss, avg_val_cer = evaluate(
               model, val_loader, criterion, dataset, decoder, device,
-              logit_scale=logit_scale, idx2char=int_to_char
+              logit_scale=logit_scale, idx2char=dataset.idx2char
           )
 
         print(f"Epoch {epoch+1}/{num_epochs} | "
