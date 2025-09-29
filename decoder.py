@@ -71,13 +71,12 @@ class CTCBeamSearchDecoder:
             key=lambda x: np.logaddexp(x[1][0], x[1][1])
         )
 
-        # Collapse repeats & remove blanks
         decoded = []
         prev = self.blank
         for c in best_seq:
             if c != prev and c != self.blank:
-                if c in self.idx2char:       
-                    decoded.append(self.idx2char[c])
+                # only append the index (we'll map to chars in evaluate)
+                decoded.append(int(c))
             prev = c
 
-        return "".join(decoded)
+        return decoded

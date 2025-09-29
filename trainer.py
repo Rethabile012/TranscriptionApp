@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from dataset import Dataset, collate_fn as user_collate_fn
+from dataset import Dataset
 from model import SpeechModel
 from decoder import CTCBeamSearchDecoder
 import editdistance
@@ -113,19 +113,28 @@ def evaluate(model, loader, criterion, dataset, decoder, device, logit_scale=Non
                 for i, length in enumerate(trans_lens):
                     target_seq = transcripts[start:start+length].cpu().numpy().tolist()
                     start += length
-                    target_text = "".join([dataset.idx2char[c] for c in target_seq])
 
-                    # Safe character mapping
-                    if preds[i]:
+                    # Build target text from idx2char mapping passed into evaluate
+                    if idx2char is None:
+                        # fallback to dataset mapping if not provided
+                        mapping = dataset.idx2char
+                    else:
+                        mapping = idx2char
+
+                    target_text = "".join([mapping[c] for c in target_seq if c in mapping])
+
+                    # preds[i] may be either:
+                    #  - a string (if a decoder returned a string) OR
+                    #  - a list of integer token indices (the unified format)
+                    if isinstance(preds[i], str):
+                        pred_text = preds[i]
+                    else:
+                        # assume list of ints
                         pred_chars = []
                         for c in preds[i]:
-                            if c in dataset.idx2char:
-                                pred_chars.append(dataset.idx2char[c])
-                            else:
-                                print(f"Warning: Unknown character index {c}, skipping")
+                            if c in mapping and mapping[c] != "<BLANK>":
+                                pred_chars.append(mapping[c])
                         pred_text = "".join(pred_chars)
-                    else:
-                        pred_text = ""
 
                     if batch_idx == 0 and i < 3:
                         print(f"Sample {i}:")
@@ -238,11 +247,10 @@ def train_ctc(num_epochs=50, batch_size=8, lr=1e-3, hidden_dim=512, device=None)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode='min', factor=0.5, patience=3
     )
-    int_to_char = {0: "<BLANK>"}
-    int_to_char.update({i+1: c for i, c in dataset.char2idx.items()})
+    
 
     decoder = CTCBeamSearchDecoder(
-        idx2char=int_to_char,
+        idx2char=dataset.idx2char,
         blank=0,
         beam_width=10
     )
