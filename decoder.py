@@ -2,7 +2,7 @@ import numpy as np
 from collections import defaultdict
 
 class CTCBeamSearchDecoder:
-    def __init__(self, idx2char, beam_width=10, blank=0):
+    def __init__(self, idx2char, beam_width=10, blank=0, lm=None):
        
         self.idx2char = idx2char
         self.beam_width = beam_width

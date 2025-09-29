@@ -148,9 +148,7 @@ def evaluate(model, loader, criterion, dataset, decoder, device, logit_scale=Non
     avg_cer = total_cer / num_samples if num_samples > 0 else 1.0
     return avg_loss, avg_cer
 
-# -------------------------
-# Collate function (kept your implementation)
-# -------------------------
+
 def collate_fn(batch):
     features, transcripts = zip(*batch)
 
